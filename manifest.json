@@ -1,0 +1,21 @@
+{
+  "name": "Pojok Baca - Pembaca Komik",
+  "short_name": "Pojok Baca",
+  "description": "Perpustakaan & Pembaca Komik Vertikal Offline",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "https://placehold.co/192x192/0284c7/ffffff?text=Pojok+Baca",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://placehold.co/512x512/0284c7/ffffff?text=Pojok+Baca",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
