@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pojok Baca - Pembaca Komik Vertikal</title>
+    
+    <!-- Link Manifest PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0284c7">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen w-screen overflow-hidden flex flex-col relative select-none">
+
+    <div id="homeView" class="w-full h-full flex flex-col overflow-y-auto bg-slate-50">
+        <!-- Top Navbar -->
+        <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center font-extrabold text-xl shadow-md shadow-sky-600/20">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900 leading-tight">Pojok Baca</h1>
+                    <p class="text-xs text-slate-500">Perpustakaan & Pembaca Komik</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="btnPwaInstall" class="hidden bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-download"></i>
+                    <span class="hidden sm:inline">Install App</span>
+                </button>
+                <button id="btnOpenAddModal" class="bg-sky-600 hover:bg-sky-500 active:scale-95 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-sky-600/20 transition flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Tambah Komik</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="max-w-7xl w-full mx-auto p-4 sm:p-8 flex-1 flex flex-col">
+            <!-- Search & Filter Bar -->
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">Koleksi Komik Saya</h2>
+                    <p class="text-xs text-slate-500">Pilih komik untuk mulai membaca vertikal dengan auto-scroll</p>
+                </div>
+                
+                <div class="relative w-full sm:w-72">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchComicInput" placeholder="Cari judul, kategori, atau #hashtag..." class="w-full pl-10 pr-4 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-sky-500 transition shadow-sm">
+                </div>
+            </div>
+
+            <div id="categoryTabs" class="flex items-center gap-2 overflow-x-auto pb-3 mb-4 hide-scrollbar">
+                <!-- Dynamic Category Tabs JS injected here -->
+            </div>
+
+            <!-- Grid List of Comics -->
+            <div id="comicGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+                <!-- Cards injected dynamically via JS -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="libraryEmptyState" class="hidden flex-col items-center justify-center py-20 text-center">
+                <div class="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 text-3xl mb-4">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-700 mb-1">Perpustakaan / Kategori Kosong</h3>
+                <p class="text-xs text-slate-500 max-w-sm mb-4">Tidak ada komik ditemukan pada kategori atau pencarian ini.</p>
+                <button id="btnEmptyAddComic" class="bg-sky-600 text-white text-xs font-semibold px-4 py-2 rounded-xl cursor-pointer">
+                    <i class="fa-solid fa-plus mr-1"></i> Tambah Komik
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <div id="readerView" class="hidden fixed inset-0 w-full h-full bg-slate-100 flex flex-col z-20">
+        <!-- Top Sticky Back Button Bar -->
+        <div id="readerHeader" class="absolute top-4 left-4 z-40 transition-opacity duration-300">
+            <button id="btnBackToHome" class="bg-white/90 hover:bg-white text-slate-800 text-xs font-semibold px-3.5 py-2 rounded-xl shadow-lg border border-slate-200/80 backdrop-blur-md flex items-center gap-2 transition active:scale-95 cursor-pointer">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Kembali ke Beranda</span>
+            </button>
+        </div>
+
+        <!-- Main Comic Container -->
+        <main id="readerContainer" class="w-full h-full overflow-auto flex flex-col items-center justify-start focus:outline-none">
+            <div id="comicWrapper" class="w-full flex flex-col items-center py-4 px-2 min-h-full transition-all duration-200 space-y-3">
+                <!-- Pages render here vertically -->
+            </div>
+        </main>
+
+        <div id="floatingDock" class="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 bg-white/90 backdrop-blur-md p-2 rounded-2xl shadow-2xl border border-slate-200/80 transition-all duration-300">
+            <div id="floatingPageBadge" class="h-12 px-3.5 bg-slate-100/90 rounded-xl text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 border border-slate-200/80" title="Halaman Sekarang">
+                <i class="fa-solid fa-book-open text-sky-600 text-xs"></i>
+                <span id="currentPageDisplay" class="text-sky-600 font-extrabold text-sm">1</span>
+                <span class="text-slate-400">/</span>
+                <span id="totalPagesDisplay" class="text-slate-500">1</span>
+            </div>
+
+            <button id="btnAutoScroll" class="w-12 h-12 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white shadow-md shadow-sky-500/30 flex items-center justify-center text-lg transition active:scale-95 cursor-pointer" title="Mulai Auto Scroll">
+                <i id="autoScrollIcon" class="fa-solid fa-play"></i>
+            </button>
+            <button id="btnOpenSettings" class="w-12 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-lg transition active:scale-95 cursor-pointer" title="Pengaturan Komik">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+        </div>
+
+        <div id="settingsDrawer" class="fixed inset-y-0 right-0 w-full max-w-sm bg-white/95 backdrop-blur-lg border-l border-slate-200 z-50 transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+                <div class="flex items-center gap-2.5">
+                    <div class="bg-sky-600 text-white p-2 rounded-xl text-sm shadow-md shadow-sky-600/20">
+                        <i class="fa-solid fa-gear"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-slate-900 text-base leading-tight">Pengaturan Komik</h2>
+                        <p id="activeComicTitle" class="text-xs text-slate-500 truncate max-w-[200px]">Judul Komik</p>
+                    </div>
+                </div>
+                <button id="btnCloseSettings" class="p-2 hover:bg-slate-200 rounded-xl text-slate-500 hover:text-slate-800 transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 space-y-6">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-gauge-high text-sky-600"></i> Kecepatan Auto Scroll
+                        </label>
+                        <span id="speedValue" class="text-xs font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100">25</span>
+                    </div>
+                    <input type="range" id="speedSlider" min="1" max="100" value="25" class="w-full accent-sky-600 h-2 bg-slate-200 rounded-lg cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                        <span>1 (Pelan)</span>
+                        <span>100 (Sangat Cepat)</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Ukuran Tampilan</label>
+                    <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                        <button id="btnZoomOut" class="flex-1 py-2 bg-white hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 shadow-sm border border-slate-200 transition cursor-pointer">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <span id="zoomDisplay" class="text-xs font-bold text-slate-700 min-w-[3.5rem] text-center">Fit</span>
+                        <button id="btnZoomIn" class="flex-1 py-2 bg-white hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 shadow-sm border border-slate-200 transition cursor-pointer">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <button id="btnZoomReset" class="py-2 px-3 bg-white hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-500 hover:text-sky-600 shadow-sm border border-slate-200 transition cursor-pointer" title="Fit Screen">
+                            <i class="fa-solid fa-compress"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Layar</label>
+                    <button id="btnFullscreen" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition border border-slate-200 cursor-pointer">
+                        <i class="fa-solid fa-expand"></i>
+                        <span>Mode Layar Penuh</span>
+                    </button>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Lompat Halaman</label>
+                        <span id="totalPagesBadge" class="text-xs bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">0 Halaman</span>
+                    </div>
+                    <div id="thumbnailContainer" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        <!-- Thumbnails injected via JS -->
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100">
+                    <button id="btnDrawerBackHome" class="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition border border-rose-200 cursor-pointer">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Tutup & Kembali ke Beranda</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="drawerBackdrop" class="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0"></div>
+    </div>
+
+    <div id="addComicModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity duration-200 opacity-0 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-200 max-h-[90vh] flex flex-col" id="addComicModalBox">
+            <div class="flex items-center justify-between mb-4 flex-shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="bg-sky-100 text-sky-600 p-2 rounded-xl text-sm">
+                        <i class="fa-solid fa-file-circle-plus"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-900 text-base">Impor Komik Baru</h3>
+                </div>
+                <button id="btnCloseAddModal" type="button" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="addComicForm" novalidate class="space-y-4 overflow-y-auto flex-1 pr-1">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Judul Komik <span class="text-rose-500">*</span></label>
+                    <input type="text" id="inputComicTitle" placeholder="Contoh: Komik C - Petualangan Baru" class="w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Kategori Komik</label>
+                    <div class="flex gap-2">
+                        <select id="inputComicCategorySelect" class="w-1/2 px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-sky-600 bg-white cursor-pointer">
+                            <option value="Aksi">Aksi</option>
+                            <option value="Misteri">Misteri</option>
+                            <option value="Komedi">Komedi</option>
+                            <option value="Romantis">Romantis</option>
+                            <option value="Fantasi">Fantasi</option>
+                            <option value="Slice of Life">Slice of Life</option>
+                            <option value="Lainnya">Kustom / Lainnya</option>
+                        </select>
+                        <input type="text" id="inputComicCategoryCustom" placeholder="Ketikan Kategori..." class="w-1/2 px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-sky-600 hidden">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Hashtag Spesifik (#tag)</label>
+                    <input type="text" id="inputComicTags" placeholder="Contoh: #isekai #hero #colored #tamat" class="w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-sky-600">
+                    <p class="text-[10px] text-slate-400 mt-1">Gunakan # untuk memisahkan hashtag spesifik agar mudah dicari.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Pilih File Gambar Halaman Komik <span class="text-rose-500">*</span></label>
+                    <label class="cursor-pointer border-2 border-dashed border-slate-300 hover:border-sky-500 bg-slate-50 hover:bg-sky-50/50 p-6 rounded-xl flex flex-col items-center justify-center text-center transition">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-sky-600 mb-2"></i>
+                        <span class="text-xs font-semibold text-slate-700 mb-0.5">Pilih Gambar (Bisa Banyak)</span>
+                        <span class="text-[10px] text-slate-400">Format: JPG, PNG, WEBP, SVG</span>
+                        <input type="file" id="inputComicFiles" multiple accept="image/*" class="hidden">
+                    </label>
+                    <p id="selectedFilesSummary" class="text-[11px] text-sky-600 font-medium mt-1.5 hidden"></p>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 sticky bottom-0 bg-white mt-4">
+                    <button type="button" id="btnCancelAddModal" class="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer">Batal</button>
+                    <button type="submit" id="btnSubmitAddComic" class="px-5 py-2.5 text-xs font-semibold bg-sky-600 hover:bg-sky-500 active:scale-95 text-white rounded-xl shadow-md shadow-sky-600/20 transition flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Simpan Komik</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed top-6 right-6 z-50 transform translate-y-[-100%] opacity-0 transition-all duration-300 bg-white border border-slate-200 text-slate-800 px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-3 pointer-events-none">
+        <i id="toastIcon" class="fa-solid fa-circle-info text-sky-600"></i>
+        <span id="toastMessage" class="text-xs font-medium">Pesan pemberitahuan</span>
+    </div>
+
+    <script>
+        // Registrasi Service Worker PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker PWA aktif.'))
+                .catch(err => console.error('PWA SW Register Error:', err));
+        }
+
+        let deferredPrompt = null;
+        const btnPwaInstall = document.getElementById('btnPwaInstall');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (btnPwaInstall) btnPwaInstall.classList.remove('hidden');
+        });
+
+        if (btnPwaInstall) {
+            btnPwaInstall.onclick = async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    btnPwaInstall.classList.add('hidden');
+                }
+                deferredPrompt = null;
+            };
+        }
+    </script>
+
+    <script>
+        const DB_NAME = 'PojokBacaDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'comics';
+
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function saveComicToIDB(comicData) {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.put(comicData);
+                req.onsuccess = () => resolve();
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function getAllComicsFromIDB() {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function deleteComicFromIDB(id) {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.delete(id);
+                req.onsuccess = () => resolve();
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        let comicLibrary = [];
+        let activeComic = null;
+        let selectedCategoryFilter = 'Semua';
+        let zoomLevel = 'fit';
+        let isAutoScrolling = false;
+        let autoScrollSpeed = 25;
+        let autoScrollAnimationFrame = null;
+        let lastTimestamp = 0;
+        let isSettingsOpen = false;
+
+        const homeView = document.getElementById('homeView');
+        const readerView = document.getElementById('readerView');
+        const readerContainer = document.getElementById('readerContainer');
+        const comicWrapper = document.getElementById('comicWrapper');
+        const comicGrid = document.getElementById('comicGrid');
+        const categoryTabs = document.getElementById('categoryTabs');
+        const libraryEmptyState = document.getElementById('libraryEmptyState');
+        const searchComicInput = document.getElementById('searchComicInput');
+
+        const addComicModal = document.getElementById('addComicModal');
+        const addComicModalBox = document.getElementById('addComicModalBox');
+        const addComicForm = document.getElementById('addComicForm');
+        const inputComicTitle = document.getElementById('inputComicTitle');
+        const inputComicCategorySelect = document.getElementById('inputComicCategorySelect');
+        const inputComicCategoryCustom = document.getElementById('inputComicCategoryCustom');
+        const inputComicTags = document.getElementById('inputComicTags');
+        const inputComicFiles = document.getElementById('inputComicFiles');
+        const selectedFilesSummary = document.getElementById('selectedFilesSummary');
+        const btnOpenAddModal = document.getElementById('btnOpenAddModal');
+        const btnEmptyAddComic = document.getElementById('btnEmptyAddComic');
+        const btnCloseAddModal = document.getElementById('btnCloseAddModal');
+        const btnCancelAddModal = document.getElementById('btnCancelAddModal');
+
+        const btnBackToHome = document.getElementById('btnBackToHome');
+        const btnAutoScroll = document.getElementById('btnAutoScroll');
+        const autoScrollIcon = document.getElementById('autoScrollIcon');
+        const btnOpenSettings = document.getElementById('btnOpenSettings');
+        const btnCloseSettings = document.getElementById('btnCloseSettings');
+        const settingsDrawer = document.getElementById('settingsDrawer');
+        const drawerBackdrop = document.getElementById('drawerBackdrop');
+        const activeComicTitle = document.getElementById('activeComicTitle');
+        const currentPageDisplay = document.getElementById('currentPageDisplay');
+        const totalPagesDisplay = document.getElementById('totalPagesDisplay');
+        const totalPagesBadge = document.getElementById('totalPagesBadge');
+        const thumbnailContainer = document.getElementById('thumbnailContainer');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValue = document.getElementById('speedValue');
+        const btnZoomIn = document.getElementById('btnZoomIn');
+        const btnZoomOut = document.getElementById('btnZoomOut');
+        const btnZoomReset = document.getElementById('btnZoomReset');
+        const zoomDisplay = document.getElementById('zoomDisplay');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+        const btnDrawerBackHome = document.getElementById('btnDrawerBackHome');
+
+        function parseTags(str) {
+            if (!str || typeof str !== 'string') return [];
+            return str
+                .split(/[\s,]+/)
+                .map(t => t.trim())
+                .filter(t => t.length > 0)
+                .map(t => t.startsWith('#') ? t : '#' + t);
+        }
+
+        function renderCategoryTabs() {
+            if (!categoryTabs) return;
+
+            const categoriesSet = new Set(['Semua', '⭐ Favorit']);
+            comicLibrary.forEach(comic => {
+                if (comic.category) {
+                    categoriesSet.add(comic.category);
+                }
+            });
+
+            if (!categoriesSet.has(selectedCategoryFilter)) {
+                selectedCategoryFilter = 'Semua';
+            }
+
+            categoryTabs.innerHTML = '';
+            categoriesSet.forEach(cat => {
+                const isActive = cat === selectedCategoryFilter;
+                const favCount = cat === '⭐ Favorit' ? comicLibrary.filter(c => c.isFavorite).length : null;
+                const countBadge = favCount !== null ? ` <span class="text-[10px] opacity-80">(${favCount})</span>` : '';
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `px-3.5 py-1.5 rounded-xl text-xs font-semibold transition whitespace-nowrap flex items-center gap-1 cursor-pointer ${
+                    isActive 
+                        ? 'bg-sky-600 text-white shadow-sm shadow-sky-600/30' 
+                        : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                }`;
+                btn.innerHTML = `${cat}${countBadge}`;
+                btn.onclick = () => {
+                    selectedCategoryFilter = cat;
+                    renderCategoryTabs();
+                    renderLibraryGrid(searchComicInput.value);
+                };
+                categoryTabs.appendChild(btn);
+            });
+        }
+
+        async function createDemoPageBlob(title, pageNum, totalPages, color) {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200">
+                <rect width="800" height="1200" fill="#ffffff" rx="16"/>
+                <rect x="20" y="20" width="760" height="1160" fill="none" stroke="${color}" stroke-width="4" opacity="0.2" rx="12"/>
+                <rect x="40" y="40" width="720" height="520" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2" rx="12"/>
+                <circle cx="400" cy="270" r="100" fill="${color}" opacity="0.15"/>
+                <path d="M 340 330 L 400 200 L 460 330 Z" fill="${color}"/>
+                <text x="400" y="480" text-anchor="middle" font-family="sans-serif" font-size="22" font-weight="bold" fill="#334155">${title}</text>
+                <rect x="40" y="580" width="720" height="570" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="2" rx="12"/>
+                <text x="400" y="860" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="bold" fill="#64748b">Halaman ${pageNum} dari ${totalPages}</text>
+                <text x="400" y="900" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#94a3b8">[ Format Vertikal - Gulir ke Bawah ]</text>
+            </svg>`;
+            return new Blob([svg], { type: 'image/svg+xml' });
+        }
+
+        async function initDemoComics() {
+            const comicAPageBlobs = [];
+            for (let i = 1; i <= 6; i++) {
+                comicAPageBlobs.push(await createDemoPageBlob('Komik A: Petualangan Pojok Baca', i, 6, '#0284c7'));
+            }
+
+            const comicBPageBlobs = [];
+            for (let i = 1; i <= 5; i++) {
+                comicBPageBlobs.push(await createDemoPageBlob('Komik B: Misteri Legenda Kuno', i, 5, '#6366f1'));
+            }
+
+            const demoA = {
+                id: 'demo-a',
+                title: 'Komik A: Petualangan Pojok Baca',
+                category: 'Aksi',
+                tags: ['#petualangan', '#hero', '#colored', '#op'],
+                pages: comicAPageBlobs,
+                dateAdded: 'Baru Saja',
+                isFavorite: true
+            };
+
+            const demoB = {
+                id: 'demo-b',
+                title: 'Komik B: Misteri Legenda Kuno',
+                category: 'Misteri',
+                tags: ['#misteri', '#detektif', '#teka-teki', '#tamat'],
+                pages: comicBPageBlobs,
+                dateAdded: 'Baru Saja',
+                isFavorite: false
+            };
+
+            await saveComicToIDB(demoA);
+            await saveComicToIDB(demoB);
+            await loadComicsFromStorage();
+        }
+
+        async function loadComicsFromStorage() {
+            try {
+                const storedComics = await getAllComicsFromIDB();
+                if (storedComics && storedComics.length > 0) {
+                    comicLibrary = storedComics.map(c => {
+                        const runtimePages = c.pages.map(p => p instanceof Blob ? URL.createObjectURL(p) : p);
+                        return {
+                            ...c,
+                            rawPages: c.pages,
+                            pages: runtimePages,
+                            cover: runtimePages[0] || ''
+                        };
+                    });
+                } else {
+                    await initDemoComics();
+                    return;
+                }
+            } catch (err) {
+                console.error("Gagal memuat komik dari IndexedDB:", err);
+            }
+            renderCategoryTabs();
+            renderLibraryGrid();
+        }
+
+        function renderLibraryGrid(filterKeyword = '') {
+            comicGrid.innerHTML = '';
+            const keywordLower = filterKeyword.toLowerCase().trim();
+
+            const filtered = comicLibrary.filter(c => {
+                let matchesCategory = true;
+                if (selectedCategoryFilter === '⭐ Favorit') {
+                    matchesCategory = !!c.isFavorite;
+                } else if (selectedCategoryFilter !== 'Semua') {
+                    matchesCategory = c.category === selectedCategoryFilter;
+                }
+                
+                if (!keywordLower) return matchesCategory;
+
+                const matchesTitle = c.title.toLowerCase().includes(keywordLower);
+                const matchesCatName = c.category ? c.category.toLowerCase().includes(keywordLower) : false;
+                const matchesTags = c.tags && c.tags.some(tag => tag.toLowerCase().includes(keywordLower));
+
+                return (matchesTitle || matchesCatName || matchesTags) && matchesCategory;
+            });
+
+            if (filtered.length === 0) {
+                libraryEmptyState.classList.remove('hidden');
+                comicGrid.classList.add('hidden');
+                return;
+            } else {
+                libraryEmptyState.classList.add('hidden');
+                comicGrid.classList.remove('hidden');
+            }
+
+            filtered.forEach(comic => {
+                const card = document.createElement('div');
+                card.className = "group bg-white rounded-2xl border border-slate-200/80 hover:border-sky-300 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col cursor-pointer relative";
+                
+                const tagsList = comic.tags || [];
+                const tagsHtml = tagsList.length > 0 ? `
+                    <div class="mt-2 flex flex-wrap gap-1">
+                        ${tagsList.map(tag => `
+                            <span class="btn-tag text-[9px] font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-100 px-1.5 py-0.5 rounded-md transition" data-tag="${tag}">
+                                ${tag}
+                            </span>
+                        `).join('')}
+                    </div>
+                ` : '';
+
+                card.innerHTML = `
+                    <div class="relative w-full aspect-[3/4] bg-slate-100 overflow-hidden">
+                        <img src="${comic.cover}" alt="${comic.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        
+                        <div class="absolute top-2 left-2 right-2 flex justify-between items-center z-10 pointer-events-none">
+                            <span class="bg-sky-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur border border-sky-400/30">
+                                ${comic.category || 'Lainnya'}
+                            </span>
+                            <div class="flex items-center gap-1.5 pointer-events-auto">
+                                <span class="bg-slate-900/75 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur">
+                                    ${comic.pages.length} Hal
+                                </span>
+                                <button class="btn-fav-comic w-7 h-7 rounded-lg bg-slate-900/75 hover:bg-slate-900/90 text-white backdrop-blur flex items-center justify-center transition active:scale-90 cursor-pointer" title="${comic.isFavorite ? 'Hapus dari Favorit' : 'Tambah ke Favorit'}">
+                                    <i class="fa-${comic.isFavorite ? 'solid' : 'regular'} fa-star text-xs ${comic.isFavorite ? 'text-amber-400' : 'text-slate-300 hover:text-amber-300'}"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="absolute inset-0 bg-slate-900/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="w-12 h-12 rounded-full bg-sky-600 text-white flex items-center justify-center text-lg shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                                <i class="fa-solid fa-play ml-0.5"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-3 sm:p-4 flex-1 flex flex-col justify-between bg-white">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-xs sm:text-sm line-clamp-2 mb-1 group-hover:text-sky-600 transition-colors">${comic.title}</h3>
+                            <p class="text-[10px] text-slate-400">Diimpor: ${comic.dateAdded}</p>
+                            ${tagsHtml}
+                        </div>
+                        <div class="mt-3 flex items-center justify-between pt-2 border-t border-slate-100">
+                            <button class="btn-read-comic text-xs font-semibold text-sky-600 hover:text-sky-700 flex items-center gap-1 cursor-pointer">
+                                <i class="fa-solid fa-book-open text-[10px]"></i> Baca
+                            </button>
+                            <button class="btn-delete-comic text-slate-400 hover:text-rose-500 p-1 transition cursor-pointer" title="Hapus Komik">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                card.querySelectorAll('.btn-tag').forEach(tagSpan => {
+                    tagSpan.onclick = (e) => {
+                        e.stopPropagation();
+                        const tag = tagSpan.dataset.tag;
+                        searchComicInput.value = tag;
+                        renderLibraryGrid(tag);
+                    };
+                });
+
+                card.querySelector('.btn-fav-comic').onclick = async (e) => {
+                    e.stopPropagation();
+                    comic.isFavorite = !comic.isFavorite;
+
+                    try {
+                        const dbData = {
+                            id: comic.id,
+                            title: comic.title,
+                            category: comic.category,
+                            tags: comic.tags,
+                            pages: comic.rawPages || comic.pages,
+                            dateAdded: comic.dateAdded,
+                            isFavorite: comic.isFavorite
+                        };
+                        await saveComicToIDB(dbData);
+                    } catch (err) {
+                        console.error("Gagal memperbarui status favorit di IDB:", err);
+                    }
+
+                    renderCategoryTabs();
+                    renderLibraryGrid(searchComicInput.value);
+                    showToast(comic.isFavorite ? `"${comic.title}" ditambahkan ke Favorit ⭐` : `"${comic.title}" dihapus dari Favorit`, "info");
+                };
+
+                card.querySelector('.btn-read-comic').onclick = (e) => {
+                    e.stopPropagation();
+                    openReader(comic);
+                };
+                card.onclick = () => openReader(comic);
+
+                card.querySelector('.btn-delete-comic').onclick = (e) => {
+                    e.stopPropagation();
+                    deleteComic(comic.id);
+                };
+
+                comicGrid.appendChild(card);
+            });
+        }
+
+        async function deleteComic(id) {
+            try {
+                await deleteComicFromIDB(id);
+                comicLibrary = comicLibrary.filter(c => c.id !== id);
+                renderCategoryTabs();
+                renderLibraryGrid(searchComicInput.value);
+                showToast("Komik berhasil dihapus dari perpustakaan", "info");
+            } catch (err) {
+                console.error("Gagal menghapus komik dari IDB:", err);
+                showToast("Gagal menghapus komik!", "error");
+            }
+        }
+
+        function openAddModal() {
+            addComicForm.reset();
+            inputComicCategoryCustom.classList.add('hidden');
+            selectedFilesSummary.classList.add('hidden');
+            selectedFilesSummary.textContent = '';
+
+            addComicModal.classList.remove('hidden');
+            setTimeout(() => {
+                addComicModal.classList.remove('opacity-0');
+                addComicModalBox.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeAddModal() {
+            addComicModal.classList.add('opacity-0');
+            addComicModalBox.classList.add('scale-95');
+            setTimeout(() => {
+                addComicModal.classList.add('hidden');
+                addComicForm.reset();
+                inputComicCategoryCustom.classList.add('hidden');
+                selectedFilesSummary.classList.add('hidden');
+                selectedFilesSummary.textContent = '';
+            }, 200);
+        }
+
+        btnOpenAddModal.onclick = openAddModal;
+        btnEmptyAddComic.onclick = openAddModal;
+        btnCloseAddModal.onclick = closeAddModal;
+        btnCancelAddModal.onclick = closeAddModal;
+
+        inputComicCategorySelect.onchange = (e) => {
+            if (e.target.value === 'Lainnya') {
+                inputComicCategoryCustom.classList.remove('hidden');
+                inputComicCategoryCustom.focus();
+            } else {
+                inputComicCategoryCustom.classList.add('hidden');
+            }
+        };
+
+        inputComicFiles.onchange = (e) => {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                selectedFilesSummary.textContent = `✓ ${files.length} gambar dipilih`;
+                selectedFilesSummary.classList.remove('hidden');
+            } else {
+                selectedFilesSummary.classList.add('hidden');
+            }
+        };
+
+        function naturalSort(files) {
+            return Array.from(files).sort((a, b) => 
+                a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+            );
+        }
+
+        addComicForm.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            try {
+                const title = inputComicTitle.value.trim();
+                if (!title) {
+                    showToast("Harap isi judul komik!", "error");
+                    inputComicTitle.focus();
+                    return;
+                }
+
+                let category = inputComicCategorySelect.value;
+                if (category === 'Lainnya') {
+                    category = inputComicCategoryCustom.value.trim();
+                    if (!category) {
+                        showToast("Harap ketik nama kategori kustom!", "error");
+                        inputComicCategoryCustom.focus();
+                        return;
+                    }
+                }
+
+                const files = inputComicFiles.files;
+                if (!files || files.length === 0) {
+                    showToast("Harap pilih minimal 1 gambar komik!", "error");
+                    return;
+                }
+
+                const tagsText = inputComicTags ? inputComicTags.value : '';
+                const sortedFiles = naturalSort(files);
+                const parsedTags = parseTags(tagsText);
+
+                const blobPages = [];
+                for (const file of sortedFiles) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const blob = new Blob([arrayBuffer], { type: file.type || 'image/png' });
+                    blobPages.push(blob);
+                }
+
+                const todayFormatted = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
+                const newComicIDB = {
+                    id: 'comic-' + Date.now(),
+                    title: title,
+                    category: category,
+                    tags: parsedTags,
+                    pages: blobPages,
+                    dateAdded: todayFormatted,
+                    isFavorite: false
+                };
+
+                await saveComicToIDB(newComicIDB);
+
+                const runtimePages = blobPages.map(b => URL.createObjectURL(b));
+                const runtimeComic = {
+                    ...newComicIDB,
+                    rawPages: blobPages,
+                    pages: runtimePages,
+                    cover: runtimePages[0]
+                };
+
+                comicLibrary.unshift(runtimeComic);
+                renderCategoryTabs();
+                renderLibraryGrid(searchComicInput.value);
+                closeAddModal();
+                showToast(`"${title}" [${category}] berhasil disimpan permanen!`, "success");
+            } catch (err) {
+                console.error("Terjadi kesalahan saat menyimpan komik ke IndexedDB:", err);
+                showToast("Gagal menyimpan komik. Silakan coba lagi!", "error");
+            }
+        };
+
+        searchComicInput.oninput = (e) => {
+            renderLibraryGrid(e.target.value);
+        };
+
+        function openReader(comic) {
+            if (!comic || !comic.pages || comic.pages.length === 0) {
+                showToast("Komik ini tidak memiliki halaman gambar!", "error");
+                return;
+            }
+
+            activeComic = comic;
+            activeComicTitle.textContent = comic.title;
+            
+            homeView.classList.add('hidden');
+            readerView.classList.remove('hidden');
+
+            renderComicPages();
+            readerContainer.scrollTop = 0;
+            showToast(`Membaca "${comic.title}"`, "info");
+        }
+
+        function backToHome() {
+            toggleAutoScroll(false);
+            closeSettings();
+            readerView.classList.add('hidden');
+            homeView.classList.remove('hidden');
+            activeComic = null;
+        }
+
+        btnBackToHome.onclick = backToHome;
+        btnDrawerBackHome.onclick = backToHome;
+
+        function getZoomWidthCss() {
+            if (zoomLevel === 'fit') return 'min(100%, 800px)';
+            if (zoomLevel === 'full') return '100%';
+            return `${zoomLevel}%`;
+        }
+
+        function updatePagesZoom() {
+            const pages = document.querySelectorAll('.comic-page-holder');
+            pages.forEach(p => {
+                p.style.width = getZoomWidthCss();
+            });
+        }
+
+        function renderComicPages() {
+            if (!activeComic) return;
+
+            comicWrapper.innerHTML = '';
+            thumbnailContainer.innerHTML = '';
+            totalPagesBadge.textContent = `${activeComic.pages.length} Halaman`;
+            totalPagesDisplay.textContent = activeComic.pages.length;
+            currentPageDisplay.textContent = 1;
+
+            activeComic.pages.forEach((src, idx) => {
+                const imgHolder = document.createElement('div');
+                imgHolder.className = "comic-page-holder relative transition-all duration-200 flex justify-center mx-auto";
+                imgHolder.dataset.index = idx;
+                imgHolder.style.width = getZoomWidthCss();
+
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = `Halaman ${idx + 1}`;
+                img.loading = idx < 3 ? "eager" : "lazy";
+                img.className = "rounded-xl shadow-md w-full h-auto object-contain bg-white border border-slate-200/80";
+
+                const pageBadge = document.createElement('span');
+                pageBadge.className = "absolute bottom-3 right-3 bg-slate-900/80 text-white text-[10px] px-2.5 py-0.5 rounded-full backdrop-blur font-medium pointer-events-none";
+                pageBadge.textContent = `${idx + 1}`;
+
+                imgHolder.appendChild(img);
+                imgHolder.appendChild(pageBadge);
+                comicWrapper.appendChild(imgHolder);
+
+                const thumb = document.createElement('div');
+                thumb.className = "cursor-pointer rounded-xl overflow-hidden border p-1.5 transition flex items-center gap-3 bg-white border-slate-200 hover:border-sky-500 hover:bg-sky-50/50";
+                thumb.onclick = () => {
+                    jumpToPage(idx);
+                    closeSettings();
+                };
+
+                const thumbImg = document.createElement('img');
+                thumbImg.src = src;
+                thumbImg.className = "w-10 h-14 object-cover rounded-lg bg-slate-100 border border-slate-200 flex-shrink-0";
+
+                const thumbInfo = document.createElement('div');
+                thumbInfo.className = "flex-1 min-w-0";
+                thumbInfo.innerHTML = `
+                    <p class="text-xs font-bold text-slate-800">Halaman ${idx + 1}</p>
+                    <p class="text-[10px] text-slate-400">Klik untuk lompat</p>
+                `;
+
+                thumb.appendChild(thumbImg);
+                thumb.appendChild(thumbInfo);
+                thumbnailContainer.appendChild(thumb);
+            });
+        }
+
+        readerContainer.onscroll = () => {
+            if (!activeComic || !activeComic.pages.length) return;
+            const pageElements = comicWrapper.querySelectorAll('.comic-page-holder');
+            const containerRect = readerContainer.getBoundingClientRect();
+            const viewCenter = containerRect.top + containerRect.height / 3;
+
+            let currentIdx = 0;
+            pageElements.forEach((el, idx) => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top <= viewCenter && rect.bottom >= viewCenter) {
+                    currentIdx = idx;
+                }
+            });
+
+            currentPageDisplay.textContent = currentIdx + 1;
+        };
+
+        function jumpToPage(index) {
+            if (!activeComic || index < 0 || index >= activeComic.pages.length) return;
+            const targetEl = comicWrapper.querySelector(`[data-index="${index}"]`);
+            if (targetEl) {
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function autoScrollStep(timestamp) {
+            if (!isAutoScrolling) return;
+
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const delta = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+
+            const pixelsPerSecond = (autoScrollSpeed / 100) * 1150 + 20;
+            const scrollAmount = (pixelsPerSecond * delta) / 1000;
+
+            readerContainer.scrollTop += scrollAmount;
+
+            if (readerContainer.scrollTop + readerContainer.clientHeight >= readerContainer.scrollHeight - 5) {
+                toggleAutoScroll(false);
+                showToast("Selesai membaca komik!", "info");
+                return;
+            }
+
+            autoScrollAnimationFrame = requestAnimationFrame(autoScrollStep);
+        }
+
+        function toggleAutoScroll(forceState) {
+            isAutoScrolling = forceState !== undefined ? forceState : !isAutoScrolling;
+
+            if (isAutoScrolling) {
+                if (!activeComic) return;
+                if (isSettingsOpen) closeSettings();
+
+                btnAutoScroll.classList.remove('from-sky-500', 'to-indigo-600');
+                btnAutoScroll.classList.add('from-rose-500', 'to-red-600');
+                autoScrollIcon.className = "fa-solid fa-pause";
+
+                lastTimestamp = 0;
+                autoScrollAnimationFrame = requestAnimationFrame(autoScrollStep);
+                showToast(`Auto Scroll Aktif (Kecepatan: ${autoScrollSpeed})`, "success");
+            } else {
+                btnAutoScroll.classList.remove('from-rose-500', 'to-red-600');
+                btnAutoScroll.classList.add('from-sky-500', 'to-indigo-600');
+                autoScrollIcon.className = "fa-solid fa-play";
+
+                if (autoScrollAnimationFrame) {
+                    cancelAnimationFrame(autoScrollAnimationFrame);
+                }
+            }
+        }
+
+        btnAutoScroll.onclick = () => toggleAutoScroll();
+
+        speedSlider.oninput = (e) => {
+            autoScrollSpeed = parseInt(e.target.value, 10);
+            speedValue.textContent = autoScrollSpeed;
+        };
+
+        function openSettings() {
+            isSettingsOpen = true;
+            settingsDrawer.classList.remove('translate-x-full');
+            drawerBackdrop.classList.remove('hidden');
+            setTimeout(() => drawerBackdrop.classList.remove('opacity-0'), 10);
+        }
+
+        function closeSettings() {
+            isSettingsOpen = false;
+            settingsDrawer.classList.add('translate-x-full');
+            drawerBackdrop.classList.add('opacity-0');
+            setTimeout(() => drawerBackdrop.classList.add('hidden'), 300);
+        }
+
+        btnOpenSettings.onclick = openSettings;
+        btnCloseSettings.onclick = closeSettings;
+        drawerBackdrop.onclick = closeSettings;
+
+        btnZoomIn.onclick = () => {
+            let currentNum = (zoomLevel === 'fit' || zoomLevel === 'full') ? 100 : Number(zoomLevel);
+            zoomLevel = Math.min(200, currentNum + 15);
+            zoomDisplay.textContent = `${zoomLevel}%`;
+            updatePagesZoom();
+        };
+
+        btnZoomOut.onclick = () => {
+            let currentNum = (zoomLevel === 'fit' || zoomLevel === 'full') ? 100 : Number(zoomLevel);
+            zoomLevel = Math.max(40, currentNum - 15);
+            zoomDisplay.textContent = `${zoomLevel}%`;
+            updatePagesZoom();
+        };
+
+        btnZoomReset.onclick = () => {
+            zoomLevel = 'fit';
+            zoomDisplay.textContent = 'Fit';
+            updatePagesZoom();
+        };
+
+        btnFullscreen.onclick = () => {
+            try {
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    const docEl = document.documentElement;
+                    if (docEl.requestFullscreen) {
+                        docEl.requestFullscreen();
+                    } else if (docEl.webkitRequestFullscreen) {
+                        docEl.webkitRequestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                }
+            } catch (err) {
+                console.error("Fullscreen error:", err);
+                showToast("Layar penuh tidak didukung di peramban ini", "error");
+            }
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (!readerView.classList.contains('hidden')) {
+                    toggleAutoScroll();
+                }
+            } else if (e.code === 'Escape') {
+                if (isSettingsOpen) closeSettings();
+                else if (!addComicModal.classList.contains('hidden')) closeAddModal();
+            }
+        });
+
+        function showToast(msg, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.textContent = msg;
+
+            if (type === 'error') {
+                toastIcon.className = "fa-solid fa-circle-exclamation text-rose-500";
+            } else if (type === 'success') {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-500";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-info text-sky-600";
+            }
+
+            toast.classList.remove('translate-y-[-100%]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-100%]', 'opacity-0');
+            }, 3000);
+        }
+
+        window.onload = function () {
+            loadComicsFromStorage();
+        };
+    </script>
+</body>
+</html>
